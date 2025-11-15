@@ -1140,9 +1140,12 @@ input, select, textarea {
 			-ms-transition-delay: 0.75s;
 			transition-delay: 0.75s;
 			background-image: linear-gradient(to top, rgba(19, 21, 25, 0.5), rgba(19, 21, 25, 0.5)), url("../../images/overlay.png");
-			background-size: auto, 256px 256px;
-			background-position: center, center;
-			background-repeat: no-repeat, repeat;
+			background-size: auto,
+ 256px 256px;
+			background-position: center,
+ center;
+			background-repeat: no-repeat,
+ repeat;
 			z-index: 2;
 		}
 
@@ -1349,13 +1352,15 @@ input, select, textarea {
 				border-left: solid 1px #ffffff;
 			}
 
+			
+
 				#header nav ul li:first-child {
 					border-left: 0;
 				}
 
 				#header nav ul li a {
 					display: block;
-					min-width: 7.5rem;
+					min-width: 10rem;
 					height: 2.75rem;
 					line-height: 2.75rem;
 					padding: 0 1.25rem 0 1.45rem;
@@ -1367,6 +1372,7 @@ input, select, textarea {
 
 					#header nav ul li a:hover {
 						background-color: rgba(255, 255, 255, 0.075);
+	
 					}
 
 					#header nav ul li a:active {
@@ -1656,3 +1662,5 @@ input, select, textarea {
 		body.is-preload #footer {
 			opacity: 0;
 		}
+
+		
