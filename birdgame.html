@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦜 Mystery Bird Quiz</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); max-width: 450px; width: 90%; text-align: center; }
+        #bird-img { width: 100%; height: 280px; object-fit: cover; border-radius: 12px; display: none; margin-bottom: 1.5rem; transition: filter 0.5s ease; }
+        .blur { filter: blur(30px) grayscale(1); }
+        h1 { color: #2c3e50; margin-bottom: 0.5rem; font-size: 1.5rem; }
+        .controls { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 10px; }
+        button { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
+        .btn-next { background: #3498db; color: white; }
+        .btn-reveal { background: #27ae60; color: white; }
+        #audio-player { width: 100%; margin: 1rem 0; }
+        #bird-name { font-size: 1.4rem; font-weight: 700; color: #2c3e50; margin: 10px 0; min-height: 1.6em; }
+        .hidden-text { color: transparent; background: #ddd; border-radius: 4px; display: inline-block; width: 60%; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Guess the Bird</h1>
+    <div id="loader" class="loader"></div>
+    
+    <div id="bird-name"><span class="hidden-text">Loading...</span></div>
+    
+    <audio id="audio-player" controls></audio>
+    <img id="bird-img" class="blur" src="" alt="Bird Photo">
+    
+    <div class="controls">
+        <button class="btn-reveal" onclick="reveal()">Reveal Answer</button>
+        <button class="btn-next" onclick="fetchNewBird()">Next Random Bird</button>
+    </div>
+</div>
+
+<script>
+    const birdImg = document.getElementById('bird-img');
+    const birdName = document.getElementById('bird-name');
+    const audioPlayer = document.getElementById('audio-player');
+    const loader = document.getElementById('loader');
+
+    // Using a reliable CORS proxy to bypass browser security
+    const PROXY = "https://corsproxy.io/?";
+
+    async function fetchNewBird() {
+        // UI Reset
+        loader.style.display = 'block';
+        birdImg.style.display = 'none';
+        birdImg.classList.add('blur');
+        birdName.innerHTML = '<span class="hidden-text">??????</span>';
+        
+        try {
+            // 1. Fetch from Xeno-Canto (No Key Required)
+            // Querying 'q:A' ensures high-quality recordings
+            const xcUrl = `${PROXY}https://xeno-canto.org/api/2/recordings?query=cnt:spain+q:A`; 
+            const response = await fetch(xcUrl);
+            const data = await response.json();
+            
+            const randomBird = data.recordings[Math.floor(Math.random() * data.recordings.length)];
+            const name = randomBird.en;
+            const sciName = `${randomBird.gen} ${randomBird.sp}`;
+            
+            // 2. Load Audio
+            audioPlayer.src = "https:" + randomBird.file;
+            
+            // 3. Load Image (Try English name, then Scientific name if it fails)
+            let imgUrl = await getWikiImage(name);
+            if (!imgUrl) imgUrl = await getWikiImage(sciName);
+
+            if (imgUrl) {
+                birdImg.src = imgUrl;
+                birdImg.style.display = 'block';
+            }
+            
+            // Store name for reveal
+            birdName.dataset.answer = name;
+
+        } catch (error) {
+            console.error("Game Error:", error);
+            birdName.innerText = "Error loading bird. Try again!";
+        }
+        loader.style.display = 'none';
+    }
+
+    async function getWikiImage(searchTerm) {
+        const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages&generator=search&gsrsearch=${encodeURIComponent(searchTerm)}&gsrlimit=1&piprop=original`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+            return pages[pageId].original?.source || null;
+        } catch {
+            return null;
+        }
+    }
+
+    function reveal() {
+        birdImg.classList.remove('blur');
+        birdName.innerText = birdName.dataset.answer;
+    }
+
+    // Initialize first bird
+    fetchNewBird();
+</script>
+
+</body>
+</html>
