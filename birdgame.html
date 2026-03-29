@@ -3,172 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🦜 Mystery Bird Visual Quiz</title>
+    <title>🦜 Pro Bird Master Quiz</title>
     <style>
-        :root { --primary: #3498db; --success: #2ecc71; --error: #e74c3c; --bg: #f5f7fa; --card-bg: #ffffff; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: #2d3748; }
+        :root { --primary: #3498db; --success: #2ecc71; --error: #e74c3c; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: 95%; max-width: 550px; text-align: center; }
         
-        .card { background: var(--card-bg); padding: 2rem; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; border: 1px solid #e2e8f0; }
-        h1 { font-size: 1.6rem; color: #2c3e50; margin: 0 0 1rem 0; }
+        #status-msg { color: #64748b; margin-bottom: 1rem; font-style: italic; min-height: 1.5em; }
         
-        #status-bar { font-size: 1rem; color: #7f8c8d; min-height: 1.4em; margin: 10px 0; font-style: italic; }
-        #audio-container { background: #edf2f7; padding: 10px; border-radius: 12px; margin: 15px 0; }
-        audio { width: 100%; }
-
-        /* The Options Grid */
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .option { background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; cursor: pointer; transition: 0.3s; overflow: hidden; padding: 0; display: flex; flex-direction: column; position: relative; }
+        .option:hover:not(:disabled) { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .option img { width: 100%; height: 150px; object-fit: cover; background: #eee; }
+        .option-label { padding: 10px; font-weight: 700; font-size: 0.9rem; background: #fff; width: 100%; }
         
-        /* The Option Button (rebuilt as a box) */
-        .option { background: #fdfdfd; border: 2px solid #e2e8f0; border-radius: 15px; cursor: pointer; transition: 0.2s; overflow: hidden; padding: 0; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .option:hover:not(.disabled) { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .option:disabled { cursor: default; }
-
-        /* Images inside the options */
-        .option-img { width: 100%; height: 160px; object-fit: cover; }
-        .option-label { padding: 10px; font-weight: 600; font-size: 0.95rem; text-align: center; width: 100%; }
-
-        /* Feedback States */
-        .option.correct { border-color: var(--success); background: #eafaf1; color: var(--success); }
-        .option.wrong { border-color: var(--error); background: #fdf2f2; color: var(--error); }
+        .correct { border-color: var(--success) !important; background: #f0fff4 !important; }
+        .wrong { border-color: var(--error) !important; background: #fff5f5 !important; }
         
-        /* Loading & System Buttons */
-        .system-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; cursor: pointer; margin-top: 20px; transition: 0.2s; }
-        .system-btn:hover { background: #2980b9; }
+        #credit-line { font-size: 0.75rem; color: #94a3b8; margin-top: 10px; visibility: hidden; }
+        .system-btn { width: 100%; margin-top: 20px; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: none; font-size: 1.1rem; }
         
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        audio { width: 100%; border-radius: 30px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>Listen & Choose the Bird</h1>
+    <h1 id="header">Whose song is this? 🎶</h1>
     <div id="loader" class="loader"></div>
-    <div id="status-bar">Connecting to Xeno-Canto...</div>
+    <div id="status-msg">Click "Start" to Load Birds</div>
     
-    <div id="audio-container">
-        <audio id="audio-player" controls src=""></audio>
-    </div>
+    <audio id="audio-player" controls></audio>
 
-    <div id="options" class="options-grid">
-        </div>
+    <div id="options" class="options-grid"></div>
     
-    <button id="next-btn" onclick="nextRound()" class="system-btn" style="display:none;">Next Bird ➔</button>
+    <div id="credit-line">Photo: <span id="author">...</span> | <span id="license">...</span></div>
+    
+    <button id="start-btn" onclick="initGame()" class="system-btn" style="display:block;">Start Game</button>
+    <button id="next-btn" onclick="nextRound()" class="system-btn">Next Bird ➔</button>
 </div>
 
 <script>
     const PROXY = "https://api.allorigins.win/get?url=";
+    const ALLOWED_LICENSES = ["cc-by", "cc-by-sa", "pd", "public domain", "cc0", "cc-zero"];
+    const DENIED_KEYWORDS = ["-nc", "nc-", "/nc/", "-nd", "nd-", "/nd/"];
+
     const audioPlayer = document.getElementById('audio-player');
     const optionsDiv = document.getElementById('options');
-    const statusBar = document.getElementById('status-bar');
+    const statusMsg = document.getElementById('status-msg');
     const loader = document.getElementById('loader');
     const nextBtn = document.getElementById('next-btn');
+    const creditLine = document.getElementById('credit-line');
 
-    let birdBucket = [];
+    let birdPool = [];
     let currentAnswer = "";
 
-    async function initializeGame() {
+    async function initGame() {
+        document.getElementById('start-btn').style.display = 'none';
         loader.style.display = 'block';
-        optionsDiv.innerHTML = "";
-        birdBucket = [];
-        
+        statusMsg.innerText = "Politely fetching bird data...";
+
         try {
-            // Fetch multiple birds at once for the bucket
-            const xcUrl = encodeURIComponent("https://xeno-canto.org/api/2/recordings?query=cnt:france+q:A");
-            const response = await fetch(`${PROXY}${xcUrl}`);
-            if (!response.ok) throw new Error("CORS Proxy Error");
-            const data = await response.json();
+            const target = encodeURIComponent("https://xeno-canto.org/api/2/recordings?query=cnt:spain+q:A");
+            const res = await fetch(`${PROXY}${target}`);
+            const data = await res.json();
             const json = JSON.parse(data.contents);
-            birdBucket = json.recordings.sort(() => 0.5 - Math.random()).slice(0, 10); // Load top 10 unique birds
-            
-            if (birdBucket.length < 4) throw new Error("Not enough data");
-            
+            birdPool = json.recordings.filter(b => b.en !== "");
             nextRound();
         } catch (e) {
+            statusMsg.innerText = "Connection failed. Check your browser/proxy.";
             console.error(e);
-            statusBar.innerText = "Error: Check your connection or CORS status (F12).";
         }
         loader.style.display = 'none';
     }
 
     async function nextRound() {
         nextBtn.style.display = 'none';
+        creditLine.style.visibility = 'hidden';
         optionsDiv.innerHTML = "";
-        
-        // Pick 4 unique birds from the bucket
-        const shuffled = [...birdBucket].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 4);
-        const correct = selected[0];
-        currentAnswer = correct.en;
-
-        statusBar.innerText = "Loading the mystery round...";
         loader.style.display = 'block';
+        statusMsg.innerText = "Searching for legal images...";
 
-        // Set Audio
-        audioPlayer.src = "https:" + correct.file;
-        
-        // Fetch all 4 images simultaneously (fastest way)
-        const imagePromises = selected.map(async (bird) => {
-            const img = await getWikiImage(bird.en) || await getWikiImage(`${bird.gen} ${bird.sp}`);
-            return { name: bird.en, img: img };
-        });
-        const optionsData = await Promise.all(imagePromises);
-        
-        loader.style.display = 'none';
-        statusBar.innerText = "Ready! Listen and pick.";
-
-        // Shuffle the options so the answer isn't always #1
-        optionsData.sort(() => 0.5 - Math.random());
-
-        // Generate the Buttons
-        optionsData.forEach(data => {
-            const btn = document.createElement('button');
-            btn.className = 'option';
-            btn.onclick = () => checkAnswer(btn, data.name);
-            
-            if (data.img) {
-                btn.innerHTML = `<img src="${data.img}" class="option-img" alt="${data.name}"><div class="option-label">${data.name}</div>`;
-            } else {
-                btn.innerHTML = `<div class="option-img" style="background:#ddd;display:flex;align-items:center;justify-content:center;">No Image</div><div class="option-label">${data.name}</div>`;
-            }
-            optionsDiv.appendChild(btn);
-        });
-    }
-
-    async function getWikiImage(term) {
-        try {
-            const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages&generator=search&gsrsearch=${encodeURIComponent(term)}&gsrlimit=1&piprop=original`;
-            const res = await fetch(url);
-            const data = await res.json();
-            const pageId = Object.keys(data.query.pages)[0];
-            return data.query.pages[pageId].original?.source || null;
-        } catch { return null; }
-    }
-
-    function checkAnswer(selectedBtn, name) {
-        // Disable all buttons immediately
-        const buttons = optionsDiv.querySelectorAll('button');
-        buttons.forEach(b => b.classList.add('disabled'));
-        buttons.forEach(b => b.disabled = true);
-        
-        if (name === currentAnswer) {
-            selectedBtn.classList.add('correct');
-            statusBar.innerText = "Correct! That is a " + currentAnswer + ".";
-        } else {
-            selectedBtn.classList.add('wrong');
-            statusBar.innerText = "Wrong. It was a " + currentAnswer + ".";
-            // Highlight the correct one
-            buttons.forEach(b => { 
-                const label = b.querySelector('.option-label').innerText;
-                if(label === currentAnswer) b.classList.add('correct'); 
-            });
-        }
-        nextBtn.style.display = 'block';
-    }
-
-    // Start the game immediately
-    initializeGame();
-</script>
-
-</body>
-</html>
+        // Pick a subset to find a valid round
+        const shuffled = [...birdPool].sort(() => 0.5 - Math.random());
+        const choices = shuffled.slice(0, 4);
+        const correct = choices[0];
